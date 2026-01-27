@@ -24,6 +24,7 @@ const navItems = [
   { href: '/learn', label: 'Learn', icon: BookOpen },
   { href: '/challenge', label: 'Practice', icon: Code },
   { href: '/interview', label: 'Mock Interview', icon: Briefcase },
+  { href: '/generator', label: 'AI Generator', icon: Sparkles },
   { href: '/progress', label: 'Progress', icon: BarChart3 },
   { href: '/achievements', label: 'Achievements', icon: Trophy },
   { href: '/settings', label: 'Settings', icon: Settings },

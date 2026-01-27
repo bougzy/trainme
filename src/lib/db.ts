@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { Progress, UserProfile, Achievement, Session, Note } from './types';
+import type { Progress, UserProfile, Achievement, Session, Note, CustomChallenge } from './types';
 
 export class TrainMeDB extends Dexie {
   progress!: Table<Progress, number>;
@@ -7,6 +7,7 @@ export class TrainMeDB extends Dexie {
   achievements!: Table<Achievement, number>;
   sessions!: Table<Session, number>;
   notes!: Table<Note, number>;
+  customChallenges!: Table<CustomChallenge, number>;
 
   constructor() {
     super('trainme');
@@ -16,6 +17,15 @@ export class TrainMeDB extends Dexie {
       achievements: '++id, key, unlockedAt',
       sessions: '++id, type, startedAt',
       notes: '++id, challengeId, createdAt',
+    });
+
+    this.version(2).stores({
+      progress: '++id, challengeId, status, nextReviewDate',
+      userProfile: '++id',
+      achievements: '++id, key, unlockedAt',
+      sessions: '++id, type, startedAt',
+      notes: '++id, challengeId, createdAt',
+      customChallenges: '++id, category, subcategory, type, difficulty',
     });
   }
 }
@@ -40,6 +50,9 @@ export async function initializeDB() {
         showHints: true,
         timerEnabled: true,
         soundEnabled: false,
+        aiProvider: null,
+        openaiApiKey: '',
+        anthropicApiKey: '',
       },
     });
   }

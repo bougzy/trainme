@@ -104,6 +104,18 @@ export interface UserSettings {
   showHints: boolean;
   timerEnabled: boolean;
   soundEnabled: boolean;
+  aiProvider: 'openai' | 'anthropic' | null;
+  openaiApiKey: string;
+  anthropicApiKey: string;
+}
+
+// ============================================
+// Custom / AI-Generated Challenges
+// ============================================
+export interface CustomChallenge extends Challenge {
+  createdAt: Date;
+  source: 'ai-generated' | 'user-created';
+  aiModel?: string;
 }
 
 // ============================================

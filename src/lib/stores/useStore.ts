@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Challenge, UserProfile, Progress, Category, ChallengeType } from '../types';
+import type { Challenge, UserProfile, Progress, Category, ChallengeType, CustomChallenge } from '../types';
 import { db, initializeDB } from '../db';
 import { calculateXP } from '../utils/xp';
 import { calculateSM2, scoreToQuality } from '../utils/spaced-repetition';
@@ -91,6 +91,7 @@ interface ChallengeState {
   progressMap: Record<string, Progress>;
   isLoaded: boolean;
   loadChallenges: () => Promise<void>;
+  addCustomChallenge: (challenge: CustomChallenge) => Promise<void>;
   loadProgress: () => Promise<void>;
   getChallengesByCategory: (category: Category) => Challenge[];
   getChallengesBySubcategory: (category: Category, subcategory: string) => Challenge[];
@@ -118,8 +119,16 @@ export const useChallengeStore = create<ChallengeState>((set, get) => ({
   isLoaded: false,
 
   loadChallenges: async () => {
-    const challenges = getAllChallenges();
+    const seedChallenges = getAllChallenges();
+    const customChallenges = await db.customChallenges.toArray();
+    const challenges = [...seedChallenges, ...customChallenges];
     set({ challenges, isLoaded: true });
+  },
+
+  addCustomChallenge: async (challenge: CustomChallenge) => {
+    await db.customChallenges.add(challenge);
+    const { challenges } = get();
+    set({ challenges: [...challenges, challenge] });
   },
 
   loadProgress: async () => {

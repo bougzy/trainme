@@ -2,10 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Play, Loader2 } from 'lucide-react';
 import { runTests, type RunResult } from '@/lib/utils/code-runner';
 import type { TestCase } from '@/lib/types';
+import type { Monaco } from '@monaco-editor/react';
+import OutputTabs from './OutputTabs';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
@@ -16,6 +17,7 @@ interface CodeEditorProps {
   onRunResult: (result: RunResult) => void;
   language?: string;
   height?: string;
+  showPreview?: boolean;
 }
 
 export default function CodeEditor({
@@ -25,6 +27,7 @@ export default function CodeEditor({
   onRunResult,
   language = 'javascript',
   height = '350px',
+  showPreview = false,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
   const [isRunning, setIsRunning] = useState(false);
@@ -38,7 +41,6 @@ export default function CodeEditor({
 
   const handleRun = useCallback(() => {
     setIsRunning(true);
-    // Small delay to show loading state
     setTimeout(() => {
       const runResult = runTests(code, testCases);
       setResult(runResult);
@@ -46,6 +48,45 @@ export default function CodeEditor({
       setIsRunning(false);
     }, 300);
   }, [code, testCases, onRunResult]);
+
+  const handleEditorWillMount = useCallback((monaco: Monaco) => {
+    // Suppress false-positive TypeScript errors in the editor
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: false,
+      noSuggestionDiagnostics: true,
+    });
+
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      allowJs: true,
+      checkJs: false,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      esModuleInterop: true,
+      strict: false,
+    });
+
+    // Declare common globals so they don't show "Cannot find name" errors
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      `declare var React: any;
+       declare var console: Console;
+       declare function require(module: string): any;
+       declare var module: { exports: any };
+       declare var exports: any;`,
+      'globals.d.ts'
+    );
+
+    // Also configure TypeScript defaults in case language switches
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true,
+      noSyntaxValidation: false,
+      noSuggestionDiagnostics: true,
+    });
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -68,6 +109,7 @@ export default function CodeEditor({
           value={code}
           onChange={handleChange}
           theme="vs-dark"
+          beforeMount={handleEditorWillMount}
           options={{
             minimap: { enabled: false },
             fontSize: 14,
@@ -82,47 +124,13 @@ export default function CodeEditor({
         />
       </div>
 
-      {/* Test Results */}
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border border-gray-800 rounded-xl overflow-hidden"
-          >
-            <div className={`px-4 py-2 border-b border-gray-800 flex items-center justify-between ${
-              result.allPassed ? 'bg-emerald-900/20' : 'bg-red-900/20'
-            }`}>
-              <span className={`text-sm font-medium ${result.allPassed ? 'text-emerald-400' : 'text-red-400'}`}>
-                {result.allPassed ? 'All Tests Passed!' : `${result.passedCount}/${result.totalCount} Tests Passed`}
-              </span>
-              <span className="text-xs text-gray-500">Score: {result.score}%</span>
-            </div>
-            <div className="bg-gray-950 divide-y divide-gray-800/50">
-              {result.results.map((r, i) => (
-                <div key={i} className="px-4 py-3 flex items-start gap-3">
-                  {r.passed ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                  ) : (
-                    <XCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-300">{r.description}</p>
-                    {!r.passed && (
-                      <div className="mt-1 text-xs space-y-0.5">
-                        <p className="text-gray-500">Expected: <span className="text-emerald-400 font-mono">{r.expected}</span></p>
-                        <p className="text-gray-500">Got: <span className="text-red-400 font-mono">{r.actual}</span></p>
-                        {r.error && <p className="text-red-400 font-mono">{r.error}</p>}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Output Panel with Tests, Console, and Preview tabs */}
+      <OutputTabs
+        result={result}
+        code={code}
+        language={language}
+        showPreview={showPreview}
+      />
     </div>
   );
 }

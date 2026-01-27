@@ -167,6 +167,7 @@ export default function ChallengePage() {
           testCases={challenge.testCases ?? []}
           onChange={setUserCode}
           onRunResult={handleCodeResult}
+          showPreview={challenge.tags.some(t => ['html', 'ui', 'css', 'dom'].includes(t))}
         />
       )}
 

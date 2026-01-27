@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Settings, User, Download, Upload, Trash2, Save,
-  AlertTriangle, CheckCircle, Database
+  AlertTriangle, CheckCircle, Database, Sparkles, Eye, EyeOff
 } from 'lucide-react';
 import { useUserStore, useChallengeStore } from '@/lib/stores/useStore';
 import { db } from '@/lib/db';
@@ -21,11 +21,16 @@ export default function SettingsPage() {
       showHints: true,
       timerEnabled: true,
       soundEnabled: false,
+      aiProvider: null,
+      openaiApiKey: '',
+      anthropicApiKey: '',
     }
   );
   const [saved, setSaved] = useState(false);
   const [importing, setImporting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showOpenAIKey, setShowOpenAIKey] = useState(false);
+  const [showAnthropicKey, setShowAnthropicKey] = useState(false);
 
   const handleSave = async () => {
     await updateProfile({ name, settings });
@@ -39,6 +44,7 @@ export default function SettingsPage() {
     const sessions = await db.sessions.toArray();
     const notes = await db.notes.toArray();
     const userProfile = await db.userProfile.toArray();
+    const customChallenges = await db.customChallenges.toArray();
 
     const data = {
       version: 1,
@@ -48,6 +54,7 @@ export default function SettingsPage() {
       achievements,
       sessions,
       notes,
+      customChallenges,
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -83,6 +90,7 @@ export default function SettingsPage() {
         await db.sessions.clear();
         await db.notes.clear();
         await db.userProfile.clear();
+        await db.customChallenges.clear();
 
         // Import data
         if (data.userProfile?.length) await db.userProfile.bulkAdd(data.userProfile);
@@ -90,6 +98,7 @@ export default function SettingsPage() {
         if (data.achievements?.length) await db.achievements.bulkAdd(data.achievements);
         if (data.sessions?.length) await db.sessions.bulkAdd(data.sessions);
         if (data.notes?.length) await db.notes.bulkAdd(data.notes);
+        if (data.customChallenges?.length) await db.customChallenges.bulkAdd(data.customChallenges);
 
         // Reload stores
         await useUserStore.getState().loadProfile();
@@ -112,6 +121,7 @@ export default function SettingsPage() {
     await db.sessions.clear();
     await db.notes.clear();
     await db.userProfile.clear();
+    await db.customChallenges.clear();
     setShowResetConfirm(false);
     window.location.reload();
   }, []);
@@ -200,6 +210,92 @@ export default function SettingsPage() {
               <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${settings.timerEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
+        </div>
+      </motion.div>
+
+      {/* AI Provider */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.25 }}
+        className="bg-gray-900 border border-gray-800 rounded-xl p-6"
+      >
+        <div className="flex items-center gap-2 mb-5">
+          <Sparkles className="w-5 h-5 text-yellow-400" />
+          <h2 className="text-base font-semibold text-white">AI Challenge Generator</h2>
+        </div>
+        <p className="text-xs text-gray-500 mb-5">
+          Configure an AI provider to generate custom challenges. API keys are stored locally in your browser only.
+        </p>
+        <div className="space-y-5">
+          <div>
+            <label className="text-sm text-gray-400 block mb-1.5">Provider</label>
+            <div className="flex gap-2">
+              {[
+                { value: null, label: 'None' },
+                { value: 'openai' as const, label: 'OpenAI' },
+                { value: 'anthropic' as const, label: 'Anthropic' },
+              ].map(option => (
+                <button
+                  key={option.label}
+                  onClick={() => setSettings({ ...settings, aiProvider: option.value })}
+                  className={`flex-1 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                    settings.aiProvider === option.value
+                      ? 'bg-blue-600/10 border-blue-500/40 text-blue-400'
+                      : 'bg-gray-950 border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-400'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {settings.aiProvider === 'openai' && (
+            <div>
+              <label className="text-sm text-gray-400 block mb-1.5">OpenAI API Key</label>
+              <div className="relative">
+                <input
+                  type={showOpenAIKey ? 'text' : 'password'}
+                  value={settings.openaiApiKey}
+                  onChange={e => setSettings({ ...settings, openaiApiKey: e.target.value })}
+                  placeholder="sk-..."
+                  className="w-full px-4 py-2.5 pr-10 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOpenAIKey(!showOpenAIKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                >
+                  {showOpenAIKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">Uses GPT-4o model</p>
+            </div>
+          )}
+
+          {settings.aiProvider === 'anthropic' && (
+            <div>
+              <label className="text-sm text-gray-400 block mb-1.5">Anthropic API Key</label>
+              <div className="relative">
+                <input
+                  type={showAnthropicKey ? 'text' : 'password'}
+                  value={settings.anthropicApiKey}
+                  onChange={e => setSettings({ ...settings, anthropicApiKey: e.target.value })}
+                  placeholder="sk-ant-..."
+                  className="w-full px-4 py-2.5 pr-10 bg-gray-950 border border-gray-800 rounded-lg text-sm text-gray-200 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                >
+                  {showAnthropicKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-600 mt-1">Uses Claude Sonnet model</p>
+            </div>
+          )}
         </div>
       </motion.div>
 
