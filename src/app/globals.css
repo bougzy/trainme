@@ -48,6 +48,17 @@ body {
   background-clip: text;
 }
 
+/* Code walkthrough line highlights */
+.walkthrough-line-highlight {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border-left: 3px solid rgba(99, 102, 241, 0.6) !important;
+}
+
+.walkthrough-glyph {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
 /* Pulse glow animation for achievements */
 @keyframes pulse-glow {
   0%, 100% {

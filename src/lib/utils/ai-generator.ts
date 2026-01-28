@@ -19,13 +19,42 @@ Generate a challenge in JSON format matching exactly this schema:
   "hints": ["string", "string", "string"] - exactly 3 progressive hints,
   "testCases": [{"input": "string", "expectedOutput": "string", "description": "string"}] - for CODE/DEBUG only (3-5 test cases),
   "tags": ["string"] - 3-5 relevant tags,
-  "estimatedMinutes": number - estimated time to complete
+  "estimatedMinutes": number - estimated time to complete,
+  "walkthrough": [...] - for CODE/DEBUG only (see below),
+  "conceptSections": [...] - for EXPLAIN/DESIGN/SCENARIO only (see below)
+}
+
+For CODE/DEBUG challenges, include a "walkthrough" array with 5-7 steps. Each step explains a section of the solution code:
+{
+  "walkthrough": [
+    {
+      "title": "string - short title for this code section",
+      "lines": [startLine, endLine] - 1-indexed line numbers in the solution string,
+      "what": "string - 2-3 sentences: what this code does",
+      "why": "string - 2-3 sentences: why this approach was chosen",
+      "when": "string - 2-3 sentences: when to use this pattern in real projects",
+      "how": "string - 2-3 sentences: how it works technically"
+    }
+  ]
+}
+
+For EXPLAIN/DESIGN/SCENARIO challenges, include a "conceptSections" array with 3-5 sections:
+{
+  "conceptSections": [
+    {
+      "title": "string - section title",
+      "keyTakeaway": "string - one sentence summary of this concept",
+      "explanation": "string - detailed 3-5 sentence explanation",
+      "relatedPatterns": ["string"] - 2-4 related concepts or patterns
+    }
+  ]
 }
 
 Rules:
-- For CODE challenges: include starterCode with a function signature and 3-5 testCases. The input field should be a valid JavaScript expression that calls the function.
-- For DEBUG challenges: include starterCode with buggy code and testCases.
-- For EXPLAIN/DESIGN/SCENARIO challenges: starterCode and testCases should be null.
+- For CODE challenges: include starterCode with a function signature, 3-5 testCases, and a walkthrough. The input field should be a valid JavaScript expression that calls the function.
+- For DEBUG challenges: include starterCode with buggy code, testCases, and a walkthrough.
+- For EXPLAIN/DESIGN/SCENARIO challenges: starterCode and testCases should be null. Include conceptSections.
+- Walkthrough line numbers must match the actual lines in the solution string (count newlines, 1-indexed).
 - Difficulty 1 = junior, 2 = mid-junior, 3 = mid, 4 = senior, 5 = principal level.
 - Include exactly 3 progressive hints (easy to specific).
 - Solutions should be comprehensive and educational.
@@ -58,6 +87,13 @@ function parseAndValidate(json: string, options: GeneratorOptions): Challenge {
     testCases: Array.isArray(parsed.testCases) ? parsed.testCases : undefined,
     tags: Array.isArray(parsed.tags) ? parsed.tags : [options.category],
     estimatedMinutes: typeof parsed.estimatedMinutes === 'number' ? parsed.estimatedMinutes : 10,
+    walkthrough: Array.isArray(parsed.walkthrough)
+      ? parsed.walkthrough.filter((s: Record<string, unknown>) => s.title && s.lines && s.what && s.why && s.when && s.how)
+      : undefined,
+    conceptSections: Array.isArray(parsed.conceptSections)
+      ? parsed.conceptSections.filter((s: Record<string, unknown>) => s.title && s.keyTakeaway && s.explanation)
+        .map((s: Record<string, unknown>) => ({ ...s, relatedPatterns: Array.isArray(s.relatedPatterns) ? s.relatedPatterns : [] }))
+      : undefined,
   };
 
   // Ensure hints has at least 1 entry

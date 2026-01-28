@@ -11,6 +11,7 @@ import CodeEditor from '@/components/challenge/CodeEditor';
 import ExplainEditor from '@/components/challenge/ExplainEditor';
 import ReviewEditor from '@/components/challenge/ReviewEditor';
 import HintPanel from '@/components/challenge/HintPanel';
+import CodeWalkthrough from '@/components/challenge/CodeWalkthrough';
 import type { RunResult } from '@/lib/utils/code-runner';
 
 const categoryColors: Record<string, string> = {
@@ -176,6 +177,7 @@ export default function ChallengePage() {
           initialAnswer={userAnswer}
           solution={challenge.solution}
           solutionExplanation={challenge.solutionExplanation}
+          conceptSections={challenge.conceptSections}
           onChange={setUserAnswer}
           onSelfRate={handleSelfRate}
         />
@@ -233,9 +235,12 @@ export default function ChallengePage() {
                     View Solution
                   </button>
                 ) : (
-                  <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 mt-3">
-                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{challenge.solution}</pre>
-                    <p className="text-sm text-gray-400 mt-3 pt-3 border-t border-gray-800">{challenge.solutionExplanation}</p>
+                  <div className="mt-3">
+                    <CodeWalkthrough
+                      code={challenge.solution}
+                      walkthrough={challenge.walkthrough}
+                      solutionExplanation={challenge.solutionExplanation}
+                    />
                   </div>
                 )}
               </div>

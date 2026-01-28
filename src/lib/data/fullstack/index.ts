@@ -14,6 +14,38 @@ export const fullstackChallenges: Challenge[] = [
     hints: ['Think about TWO types of tokens: short-lived access tokens (JWT, 15 min) for API access, and long-lived refresh tokens (opaque, stored server-side) for session persistence.', 'Where you store tokens matters for security. Access token in memory/localStorage (vulnerable to XSS). Refresh token in httpOnly cookie (protected from XSS, needs CSRF protection).'],
     tags: ['authentication', 'jwt', 'security', 'system-design', 'cookies'],
     estimatedMinutes: 20,
+    conceptSections: [
+      {
+        title: 'Registration and Login Flow',
+        keyTakeaway: 'Registration validates input, hashes passwords with bcrypt, and sends verification emails. Login validates credentials and issues two types of tokens with different lifetimes and purposes.',
+        explanation: 'The registration flow is the entry point: validate input shape, check for existing emails, hash the password with bcrypt (cost factor 12 — never store plaintext or use fast hashes like SHA256), store the user record, and send a verification email with a signed token. The login flow authenticates credentials, checks email verification status, and issues both an access token and a refresh token. These two token types serve fundamentally different purposes and have different security characteristics, which is covered in the next section.',
+        relatedPatterns: ['bcrypt', 'Email Verification', 'Input Validation', 'OWASP Authentication Guidelines'],
+      },
+      {
+        title: 'Token Strategy: Access + Refresh',
+        keyTakeaway: 'Use short-lived JWTs (15 min) for API access and long-lived opaque refresh tokens (7 days, httpOnly cookie) for session persistence. This combines the speed of stateless tokens with the security of server-side sessions.',
+        explanation: 'Access tokens are JWTs — self-contained, signed tokens that can be verified without a database call. They are fast but cannot be revoked once issued, which is why they must be short-lived (15 minutes). Refresh tokens are opaque (random strings), stored server-side as hashed values, and placed in httpOnly Secure SameSite=Strict cookies. They last longer (7 days) and can be revoked by deleting the server-side record. The access token goes in the Authorization header; the refresh token stays in a cookie that JavaScript cannot access (XSS protection). This two-token architecture gives you the performance of stateless auth with the security control of server-side sessions.',
+        relatedPatterns: ['JWT', 'OAuth 2.0 Refresh Tokens', 'httpOnly Cookies', 'Stateless Authentication'],
+      },
+      {
+        title: 'Session Management and Token Rotation',
+        keyTakeaway: 'Each refresh rotates both tokens and invalidates the old refresh token. Detecting reuse of an old token triggers revocation of ALL tokens for that user (stolen token detection).',
+        explanation: 'Token rotation is a critical security mechanism. When a client uses their refresh token to get a new access token, the server also issues a new refresh token and invalidates the old one. If an attacker steals a refresh token and uses it after the legitimate user already refreshed, the server detects the reuse of an invalidated token and revokes ALL tokens for that user. This forces both the attacker and the legitimate user to re-authenticate, but it prevents silent ongoing compromise. The /auth/refresh endpoint validates the refresh token cookie, returns a new access token, and rotates the refresh token. The /auth/logout endpoint invalidates the refresh token and clears the cookie.',
+        relatedPatterns: ['Token Rotation', 'Refresh Token Families', 'Session Revocation', 'Stolen Token Detection'],
+      },
+      {
+        title: 'Password Reset Flow',
+        keyTakeaway: 'Password reset uses a signed, time-limited token (1 hour) sent via email. After reset, ALL existing refresh tokens are invalidated to force re-authentication on all devices.',
+        explanation: 'The forgot-password endpoint generates a cryptographically signed token with a 1-hour expiry and emails it as a link. The reset-password endpoint validates the token, updates the password hash, and — critically — invalidates ALL refresh tokens for that user. This ensures that if the password reset was triggered because an account was compromised, the attacker is immediately logged out of all devices. The token should be single-use (mark as used after consumption) to prevent replay attacks.',
+        relatedPatterns: ['Signed Tokens', 'Time-Limited URLs', 'Session Invalidation', 'Account Recovery'],
+      },
+      {
+        title: 'Security Hardening',
+        keyTakeaway: 'Defense in depth: CSRF protection via SameSite cookies + custom headers, rate limiting on login (5 attempts/15 min), account lockout after 10 failures, and HTTPS-only token transmission.',
+        explanation: 'Security is layered. CSRF protection uses SameSite=Strict on cookies (prevents cross-origin requests from including the cookie) combined with requiring a custom header like X-Requested-With (which cannot be set by cross-origin forms). Rate limiting prevents brute-force attacks: 5 failed attempts per 15 minutes per IP, with account lockout after 10 consecutive failures. Password requirements should include minimum length (8 characters) and checking against breached password lists (Have I Been Pwned API). All tokens must be transmitted over HTTPS only — set the Secure flag on cookies. Finally, maintain an audit log of all security events (logins, logouts, failed attempts, password changes) for incident response.',
+        relatedPatterns: ['CSRF Protection', 'Rate Limiting', 'Brute Force Prevention', 'OWASP Top 10', 'Defense in Depth'],
+      },
+    ],
   },
   {
     id: 'fs-002',

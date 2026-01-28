@@ -14,6 +14,32 @@ export const behavioralChallenges: Challenge[] = [
     hints: ['Use STAR format strictly. The strongest answers show that you led with data and chose a private setting for the disagreement.', 'The result should include both the technical outcome and the relationship outcome. Did the process improve for future decisions?'],
     tags: ['star-method', 'conflict-resolution', 'communication', 'leadership'],
     estimatedMinutes: 8,
+    conceptSections: [
+      {
+        title: 'Setting the Scene (Situation & Task)',
+        keyTakeaway: 'A strong STAR response begins with a specific, concrete scenario that establishes context — not a generic "sometimes I disagree" statement.',
+        explanation: 'The Situation sets the stage with enough detail for the interviewer to understand the stakes. Mention the project, the technology decision, and who made it. The Task defines YOUR role and responsibility — what was your specific obligation? Avoid vague setups. "We were building a real-time dashboard and the lead chose custom WebSockets over SSE" is much stronger than "my team made a decision I disagreed with." The interviewer needs to understand WHY the disagreement mattered, not just that it happened.',
+        relatedPatterns: ['STAR Method', 'Situational Leadership', 'Stakeholder Analysis'],
+      },
+      {
+        title: 'Choosing the Right Setting',
+        keyTakeaway: 'Raise disagreements in private (1:1), not in group settings. This protects the other person\'s authority and creates space for honest discussion.',
+        explanation: 'The channel you choose for disagreement is as important as the content. A 1:1 meeting signals respect and creates psychological safety for both parties. Public challenges feel like attacks regardless of intent, and they force people into defensive positions. Scheduling a dedicated meeting also shows you take the issue seriously enough to prepare, rather than ambushing someone in a standup. This is a key leadership behavior that interviewers specifically look for — it demonstrates emotional intelligence and organizational awareness.',
+        relatedPatterns: ['Psychological Safety', 'Feedback Frameworks', 'Radical Candor'],
+      },
+      {
+        title: 'Data-Driven Argumentation',
+        keyTakeaway: 'Frame disagreements as exploration ("have we considered X?") backed by evidence, not as challenges ("you are wrong about Y").',
+        explanation: 'Prepare a comparison document or evidence before the conversation. Include concrete data: time estimates, technical trade-offs, precedents, or proof-of-concepts. Framing as "I want to make sure we have considered this alternative" invites collaboration rather than confrontation. Critically, acknowledge the legitimate reasons for the original decision — this shows you understand their reasoning and are not dismissing it. The strongest technical disagreements are ones where you can articulate BOTH sides clearly and still make a case for your preferred approach.',
+        relatedPatterns: ['RFC Documents', 'Architecture Decision Records', 'Devil\'s Advocate'],
+      },
+      {
+        title: 'Outcome and Growth',
+        keyTakeaway: 'The best results include both the immediate technical outcome AND a lasting process improvement (like adopting RFC documents for future decisions).',
+        explanation: 'Interviewers care about what happened, but they care even more about what you LEARNED and how the process improved. A purely technical outcome ("we saved 2 weeks") is good. A systemic improvement ("the team adopted RFC documents for architecture decisions") is great. It shows you think beyond individual incidents and improve how the team operates. Also mention the relationship outcome — did the disagreement damage trust or strengthen it? The ideal story ends with increased trust and better collaboration.',
+        relatedPatterns: ['Retrospectives', 'Continuous Improvement', 'Blameless Culture'],
+      },
+    ],
   },
   {
     id: 'bh-002',

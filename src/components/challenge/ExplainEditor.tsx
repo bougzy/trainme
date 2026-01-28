@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Check } from 'lucide-react';
+import { Eye, EyeOff, Check, Copy } from 'lucide-react';
+import ConceptBreakdown from '@/components/challenge/ConceptBreakdown';
+import type { ConceptSection } from '@/lib/types';
 
 interface ExplainEditorProps {
   initialAnswer: string;
   solution: string;
   solutionExplanation: string;
+  conceptSections?: ConceptSection[];
   onChange: (answer: string) => void;
   onSelfRate: (rating: number) => void;
 }
@@ -16,12 +19,14 @@ export default function ExplainEditor({
   initialAnswer,
   solution,
   solutionExplanation,
+  conceptSections,
   onChange,
   onSelfRate,
 }: ExplainEditorProps) {
   const [answer, setAnswer] = useState(initialAnswer);
   const [showSolution, setShowSolution] = useState(false);
   const [selfRating, setSelfRating] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleChange = (value: string) => {
     setAnswer(value);
@@ -70,21 +75,11 @@ export default function ExplainEditor({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="border border-emerald-800/30 bg-emerald-900/10 rounded-xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Check className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-emerald-400">Model Answer</h3>
-              </div>
-              <div className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">
-                {solution}
-              </div>
-              {solutionExplanation && (
-                <div className="mt-4 pt-4 border-t border-emerald-800/20">
-                  <p className="text-xs font-medium text-gray-500 mb-2">EXPLANATION</p>
-                  <p className="text-sm text-gray-400 leading-relaxed">{solutionExplanation}</p>
-                </div>
-              )}
-            </div>
+            <ConceptBreakdown
+              solution={solution}
+              conceptSections={conceptSections}
+              solutionExplanation={solutionExplanation}
+            />
 
             {/* Self Rating */}
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">

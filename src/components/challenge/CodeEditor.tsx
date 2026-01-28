@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { Play, Loader2 } from 'lucide-react';
+import { Play, Loader2, Copy, Check } from 'lucide-react';
 import { runTests, type RunResult } from '@/lib/utils/code-runner';
 import type { TestCase } from '@/lib/types';
 import type { Monaco } from '@monaco-editor/react';
@@ -32,6 +32,7 @@ export default function CodeEditor({
   const [code, setCode] = useState(initialCode);
   const [isRunning, setIsRunning] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const handleChange = useCallback((value: string | undefined) => {
     const newCode = value ?? '';
@@ -95,14 +96,27 @@ export default function CodeEditor({
       <div className="border border-gray-800 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-800">
           <span className="text-xs text-gray-500 font-mono">{language}</span>
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
-          >
-            {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            Run Code
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(code);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-xs font-medium rounded-lg transition-colors"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition-colors"
+            >
+              {isRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+              Run Code
+            </button>
+          </div>
         </div>
         <MonacoEditor
           height={height}

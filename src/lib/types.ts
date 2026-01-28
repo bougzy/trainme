@@ -45,6 +45,25 @@ export interface ScenarioPart {
   solutionExplanation: string;
 }
 
+// ============================================
+// Walkthrough / Interactive Explanation
+// ============================================
+export interface WalkthroughStep {
+  title: string;
+  lines: [number, number];
+  what: string;
+  why: string;
+  when: string;
+  how: string;
+}
+
+export interface ConceptSection {
+  title: string;
+  keyTakeaway: string;
+  explanation: string;
+  relatedPatterns: string[];
+}
+
 export interface Challenge {
   id: string;
   category: Category;
@@ -63,6 +82,8 @@ export interface Challenge {
   scenarioParts?: ScenarioPart[];
   tags: string[];
   estimatedMinutes: number;
+  walkthrough?: WalkthroughStep[];
+  conceptSections?: ConceptSection[];
 }
 
 // ============================================
