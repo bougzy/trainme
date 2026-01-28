@@ -50,10 +50,11 @@ export default function CodeEditor({
   }, [code, testCases, onRunResult]);
 
   const handleEditorWillMount = useCallback((monaco: Monaco) => {
-    // Suppress false-positive TypeScript errors in the editor
+    // Suppress false-positive TypeScript/syntax errors in the editor
+    // Real syntax errors are caught at runtime by the test runner
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
-      noSyntaxValidation: false,
+      noSyntaxValidation: true,
       noSuggestionDiagnostics: true,
     });
 
@@ -83,7 +84,7 @@ export default function CodeEditor({
     // Also configure TypeScript defaults in case language switches
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
-      noSyntaxValidation: false,
+      noSyntaxValidation: true,
       noSuggestionDiagnostics: true,
     });
   }, []);
